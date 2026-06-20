@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login | AHMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #061728 0%, #0a2342 55%, #102f52 100%);
+        }
+        .auth-card {
+            max-width: 460px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: #0b1f38;
+            color: #f8fafc;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        }
+        .logo-placeholder {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            background: #123a64;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .form-control {
+            background: #07182b;
+            border-color: #274c77;
+            color: #fff;
+        }
+        .form-control:focus {
+            background: #07182b;
+            border-color: #64b5f6;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(100, 181, 246, 0.2);
+        }
+        .form-control::placeholder {
+            color: #9fb4c8;
+        }
+        a {
+            color: #9bd1ff;
+        }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center p-3">
+    <div class="card auth-card rounded-4 w-100">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="logo-placeholder">AHMS</div>
+                <div>
+                    <h1 class="h4 mb-1">Hospital Login</h1>
+                    <p class="text-light-emphasis mb-0">Advanced Hospital Management System</p>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} mb-3">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% if lockout_remaining %}
+                <div class="alert alert-warning">Account locked. Try again in {{ lockout_remaining|floatformat:0 }} seconds.</div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}<div class="text-warning small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                    {{ form.password }}
+                    {% for error in form.password.errors %}<div class="text-warning small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <a href="{% url 'authentication:password_reset' %}" class="small text-decoration-none">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-info w-100 fw-semibold">Sign in</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

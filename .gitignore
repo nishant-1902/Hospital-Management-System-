@@ -1,0 +1,10 @@
+.env
+.venv/
+.uv-cache/
+.uv-python/
+__pycache__/
+*.py[cod]
+db.sqlite3
+staticfiles/
+media/*
+!media/.gitkeep

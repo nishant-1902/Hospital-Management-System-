@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="h3 mb-1">{{ dashboard_role|title }} Dashboard</h1>
+        <p class="text-muted mb-0">Welcome, {{ request.user.get_full_name|default:request.user.email }}.</p>
+    </div>
+    <a href="{% url 'authentication:profile' %}" class="btn btn-outline-primary">Profile</a>
+</div>
+{% endblock %}

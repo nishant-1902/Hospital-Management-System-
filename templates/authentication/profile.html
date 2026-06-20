@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | AHMS{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">My Profile</h1>
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ profile_form.first_name.id_for_label }}">First name</label>
+                            {{ profile_form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ profile_form.last_name.id_for_label }}">Last name</label>
+                            {{ profile_form.last_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ profile_form.phone.id_for_label }}">Phone</label>
+                            {{ profile_form.phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ profile_form.profile_photo.id_for_label }}">Profile photo</label>
+                            {{ profile_form.profile_photo }}
+                        </div>
+                    </div>
+                    <button type="submit" name="update_profile" class="btn btn-primary mt-4">Save profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Change Password</h2>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ password_form.old_password.id_for_label }}">Current password</label>
+                        {{ password_form.old_password }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ password_form.new_password1.id_for_label }}">New password</label>
+                        {{ password_form.new_password1 }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ password_form.new_password2.id_for_label }}">Confirm new password</label>
+                        {{ password_form.new_password2 }}
+                    </div>
+                    {% if password_form.errors %}
+                        <div class="alert alert-danger">{{ password_form.errors }}</div>
+                    {% endif %}
+                    <button type="submit" name="change_password" class="btn btn-outline-primary">Change password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
