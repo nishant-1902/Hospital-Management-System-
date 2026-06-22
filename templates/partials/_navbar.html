@@ -1,0 +1,37 @@
+<nav class="navbar navbar-expand-lg navbar-dark ahms-navbar fixed-top">
+    <div class="container-fluid">
+        <button class="btn btn-link text-white d-lg-none me-2 p-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#ahmsSidebar" aria-controls="ahmsSidebar" aria-label="Open navigation">
+            <i class="fa-solid fa-bars fa-lg"></i>
+        </button>
+
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'authentication:home' %}">
+            <span class="ahms-logo"><i class="fa-solid fa-hospital"></i></span>
+            <span>AHMS</span>
+        </a>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+            {% if request.user.is_authenticated %}
+                <div class="d-none d-md-flex align-items-center gap-2 text-white">
+                    <span class="fw-medium">{{ request.user.get_full_name|default:request.user.email }}</span>
+                    <span class="badge text-bg-light text-uppercase">{{ request.user.role }}</span>
+                </div>
+            {% endif %}
+
+            <button class="btn btn-link text-white position-relative p-0" type="button" aria-label="Notifications">
+                <i class="fa-regular fa-bell fa-lg"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New notifications</span>
+                </span>
+            </button>
+
+            {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-light">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</nav>

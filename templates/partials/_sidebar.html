@@ -1,0 +1,53 @@
+{% load ahms_tags %}
+<aside class="offcanvas-lg offcanvas-start ahms-sidebar" tabindex="-1" id="ahmsSidebar" aria-labelledby="ahmsSidebarLabel">
+    <div class="offcanvas-header d-lg-none">
+        <h5 class="offcanvas-title" id="ahmsSidebarLabel">Navigation</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#ahmsSidebar" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body p-0">
+        <nav class="ahms-sidebar-nav">
+            {% if user.role == 'ADMIN' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% elif user.role == 'DOCTOR' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% elif user.role == 'PATIENT' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% elif user.role == 'RECEPTIONIST' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% elif user.role == 'PHARMACIST' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% elif user.role == 'LAB_TECH' %}
+                {% for item in menu_items %}
+                    <a class="ahms-sidebar-link{% if request.path == item.url or request.path|startswith:item.active_prefix %} active{% endif %}" href="{{ item.url }}">
+                        <i class="{{ item.icon }}"></i><span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <a class="ahms-sidebar-link active" href="{% url 'authentication:home' %}">
+                    <i class="fa-solid fa-house"></i><span>Home</span>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+</aside>
