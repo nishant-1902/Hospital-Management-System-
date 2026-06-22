@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Appointment | AHMS{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Edit Appointment</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'appointments:detail' object.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save Appointment</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

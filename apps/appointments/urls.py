@@ -1,8 +1,21 @@
 from django.urls import path
-from django.views.generic import TemplateView
+
+from .views import (
+    AppointmentCancelView,
+    AppointmentCreateView,
+    AppointmentDetailView,
+    AppointmentListView,
+    AppointmentUpdateView,
+    TodaysAppointmentsView,
+)
 
 app_name = "appointments"
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="appointments/index.html"), name="index"),
+    path("", AppointmentListView.as_view(), name="index"),
+    path("book/", AppointmentCreateView.as_view(), name="create"),
+    path("today/", TodaysAppointmentsView.as_view(), name="today"),
+    path("<int:pk>/", AppointmentDetailView.as_view(), name="detail"),
+    path("<int:pk>/edit/", AppointmentUpdateView.as_view(), name="update"),
+    path("<int:pk>/cancel/", AppointmentCancelView.as_view(), name="cancel"),
 ]

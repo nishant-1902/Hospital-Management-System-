@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load ahms_tags %}
+
+{% block title %}Appointments | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Appointments</h1>
+        <p class="text-muted mb-0">Filter schedules by date, doctor, status, and type.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'appointments:today' %}" class="btn btn-outline-primary">Today</a>
+        <a href="{% url 'appointments:create' %}" class="btn btn-primary"><i class="fa-solid fa-calendar-plus me-1"></i> Book Appointment</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3"><label class="form-label">Search</label><input name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Patient or PID"></div>
+            <div class="col-md-2"><label class="form-label">From</label><input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label">To</label><input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control"></div>
+            <div class="col-md-2">
+                <label class="form-label">Doctor</label>
+                <select name="doctor" class="form-select">
+                    <option value="">All</option>
+                    {% for doctor in doctors %}
+                        <option value="{{ doctor.pk }}" {% if request.GET.doctor == doctor.pk|stringformat:"s" %}selected{% endif %}>Dr. {{ doctor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    {% for value,label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All</option>
+                    {% for value,label in type_choices %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1 d-grid"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-filter"></i></button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Token</th><th>Date</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for appointment in appointments %}
+                    {% badge_color appointment.status as status_color %}
+                    <tr>
+                        <td class="fw-semibold">{{ appointment.token_no|default:"-" }}</td>
+                        <td>{{ appointment.date|date:"d M Y" }} {{ appointment.time|time:"H:i" }}</td>
+                        <td>{{ appointment.patient.name }}<br><small class="text-muted">{{ appointment.patient.pid }}</small></td>
+                        <td>Dr. {{ appointment.doctor.name }}</td>
+                        <td>{{ appointment.get_type_display }}</td>
+                        <td><span class="badge bg-{{ status_color }}">{{ appointment.get_status_display }}</span></td>
+                        <td class="text-end">
+                            <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'appointments:update' appointment.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">No appointments found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white">{% include "partials/_pagination.html" %}</div>
+</div>
+{% endblock %}

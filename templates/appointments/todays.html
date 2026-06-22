@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load ahms_tags %}
+
+{% block title %}Today's Appointments | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="h3 mb-1">Today's Appointments</h1><p class="text-muted mb-0">{{ today|date:"l, d M Y" }}</p></div>
+    <a href="{% url 'appointments:create' %}" class="btn btn-primary">Book Appointment</a>
+</div>
+
+<div class="row g-4">
+    {% for appointment in appointments %}
+        {% badge_color appointment.status as status_color %}
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="display-5 fw-bold text-primary">{{ appointment.token_no|default:"-" }}</div>
+                    <h2 class="h5 mb-1">{{ appointment.patient.name }}</h2>
+                    <p class="text-muted mb-2">{{ appointment.time|time:"H:i" }} | Dr. {{ appointment.doctor.name }}</p>
+                    <span class="badge bg-{{ status_color }}">{{ appointment.get_status_display }}</span>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-sm btn-outline-primary">Open</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center text-muted py-5">No appointments today.</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}

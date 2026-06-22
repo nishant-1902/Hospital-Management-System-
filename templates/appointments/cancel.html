@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Cancel Appointment | AHMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">Cancel Appointment</div>
+            <div class="card-body">
+                <p>Cancel appointment for <strong>{{ appointment.patient.name }}</strong> with <strong>Dr. {{ appointment.doctor.name }}</strong> on {{ appointment.date|date:"d M Y" }} at {{ appointment.time|time:"H:i" }}?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.reason.label_tag }}
+                    {{ form.reason }}
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-outline-secondary">Back</a>
+                        <button class="btn btn-danger" type="submit">Cancel Appointment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

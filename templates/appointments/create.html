@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="h3 mb-1">Book Appointment</h1><p class="text-muted mb-0">Select patient, doctor, slot, and confirm.</p></div>
+    <a href="{% url 'appointments:index' %}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="appointmentWizard">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <input type="hidden" name="patient" id="id_patient">
+            <input type="hidden" name="doctor" id="id_doctor">
+            <input type="hidden" name="time" id="id_time">
+
+            <ul class="nav nav-pills mb-4" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-step-target="stepPatient" type="button">1 Patient</button></li>
+                <li class="nav-item"><button class="nav-link" data-step-target="stepDoctor" type="button">2 Doctor & Slot</button></li>
+                <li class="nav-item"><button class="nav-link" data-step-target="stepConfirm" type="button">3 Confirm</button></li>
+            </ul>
+
+            <section id="stepPatient" class="wizard-step">
+                <label class="form-label" for="patientSearch">Search Patient</label>
+                <input id="patientSearch" class="form-control" type="search" placeholder="Type name, phone, or PID">
+                <div id="patientResults" class="list-group mt-2"></div>
+                <div class="alert alert-info mt-3 d-none" id="selectedPatient"></div>
+            </section>
+
+            <section id="stepDoctor" class="wizard-step d-none">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="specializationSelect">Specialization</label>
+                        <select id="specializationSelect" name="specialization" class="form-select">
+                            <option value="">All</option>
+                            {% for specialization in specializations %}
+                                <option value="{{ specialization }}">{{ specialization }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="doctorSelect">Doctor</label>
+                        <select id="doctorSelect" class="form-select">
+                            <option value="">Select doctor</option>
+                            {% for doctor in doctors %}
+                                <option value="{{ doctor.pk }}" data-specialization="{{ doctor.specialization }}">Dr. {{ doctor.name }} - {{ doctor.specialization }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_date">Date</label>
+                        {{ form.date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_type">Type</label>
+                        {{ form.type }}
+                    </div>
+                    <div class="col-12">
+                        <button type="button" id="loadSlots" class="btn btn-outline-primary">Show Free Slots</button>
+                        <div id="slotResults" class="d-flex flex-wrap gap-2 mt-3"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="stepConfirm" class="wizard-step d-none">
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="p-3 border rounded"><div class="text-muted">Patient</div><strong id="confirmPatient">-</strong></div></div>
+                    <div class="col-md-6"><div class="p-3 border rounded"><div class="text-muted">Doctor</div><strong id="confirmDoctor">-</strong></div></div>
+                    <div class="col-md-6"><div class="p-3 border rounded"><div class="text-muted">Date</div><strong id="confirmDate">-</strong></div></div>
+                    <div class="col-md-6"><div class="p-3 border rounded"><div class="text-muted">Time</div><strong id="confirmTime">-</strong></div></div>
+                    <div class="col-12">
+                        <label class="form-label" for="id_notes">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </section>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-outline-secondary" type="button" id="prevStep">Previous</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" type="button" id="nextStep">Next</button>
+                    <button class="btn btn-success d-none" type="submit" id="submitBooking">Book Appointment</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var steps = ["stepPatient", "stepDoctor", "stepConfirm"];
+        var current = 0;
+        var selectedPatientText = "";
+        var selectedDoctorText = "";
+
+        function showStep(index) {
+            current = Math.max(0, Math.min(index, steps.length - 1));
+            steps.forEach(function (id, idx) {
+                document.getElementById(id).classList.toggle("d-none", idx !== current);
+                document.querySelector('[data-step-target="' + id + '"]').classList.toggle("active", idx === current);
+            });
+            document.getElementById("nextStep").classList.toggle("d-none", current === steps.length - 1);
+            document.getElementById("submitBooking").classList.toggle("d-none", current !== steps.length - 1);
+        }
+
+        document.getElementById("nextStep").addEventListener("click", function () {
+            document.getElementById("confirmPatient").textContent = selectedPatientText || "-";
+            document.getElementById("confirmDoctor").textContent = selectedDoctorText || "-";
+            document.getElementById("confirmDate").textContent = document.getElementById("id_date").value || "-";
+            document.getElementById("confirmTime").textContent = document.getElementById("id_time").value || "-";
+            showStep(current + 1);
+        });
+        document.getElementById("prevStep").addEventListener("click", function () { showStep(current - 1); });
+        document.querySelectorAll("[data-step-target]").forEach(function (button, idx) {
+            button.addEventListener("click", function () { showStep(idx); });
+        });
+
+        document.getElementById("patientSearch").addEventListener("input", debounce(function () {
+            var q = this.value;
+            if (q.length < 2) return;
+            fetch("{% url 'patients-api:search' %}?q=" + encodeURIComponent(q))
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    var box = document.getElementById("patientResults");
+                    box.innerHTML = "";
+                    data.results.forEach(function (patient) {
+                        var item = document.createElement("button");
+                        item.type = "button";
+                        item.className = "list-group-item list-group-item-action";
+                        item.textContent = patient.pid + " - " + patient.name + " (" + patient.phone + ")";
+                        item.addEventListener("click", function () {
+                            document.getElementById("id_patient").value = patient.id;
+                            selectedPatientText = item.textContent;
+                            document.getElementById("selectedPatient").textContent = selectedPatientText;
+                            document.getElementById("selectedPatient").classList.remove("d-none");
+                            box.innerHTML = "";
+                        });
+                        box.appendChild(item);
+                    });
+                });
+        }, 300));
+
+        document.getElementById("specializationSelect").addEventListener("change", function () {
+            var specialization = this.value;
+            document.querySelectorAll("#doctorSelect option").forEach(function (option) {
+                option.hidden = specialization && option.dataset.specialization !== specialization && option.value;
+            });
+        });
+
+        document.getElementById("doctorSelect").addEventListener("change", function () {
+            document.getElementById("id_doctor").value = this.value;
+            selectedDoctorText = this.options[this.selectedIndex].textContent;
+        });
+
+        document.getElementById("loadSlots").addEventListener("click", function () {
+            var doctorId = document.getElementById("id_doctor").value;
+            var date = document.getElementById("id_date").value;
+            var box = document.getElementById("slotResults");
+            box.innerHTML = "";
+            if (!doctorId || !date) return;
+            fetch("{% url 'appointments-api:slots' %}?doctor_id=" + doctorId + "&date=" + date)
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (!data.slots.length) {
+                        box.innerHTML = '<span class="text-muted">No free slots.</span>';
+                        return;
+                    }
+                    data.slots.forEach(function (slot) {
+                        var button = document.createElement("button");
+                        button.type = "button";
+                        button.className = "btn btn-outline-primary btn-sm";
+                        button.textContent = slot;
+                        button.addEventListener("click", function () {
+                            document.getElementById("id_time").value = slot;
+                            box.querySelectorAll(".btn").forEach(function (item) { item.classList.remove("active"); });
+                            button.classList.add("active");
+                        });
+                        box.appendChild(button);
+                    });
+                });
+        });
+    });
+</script>
+{% endblock %}

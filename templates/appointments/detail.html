@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load ahms_tags %}
+
+{% block title %}Appointment #{{ appointment.pk }} | AHMS{% endblock %}
+
+{% block content %}
+{% badge_color appointment.status as status_color %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Appointment #{{ appointment.pk }}</h1>
+        <p class="text-muted mb-0">{{ appointment.date|date:"d M Y" }} at {{ appointment.time|time:"H:i" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'appointments:update' appointment.pk %}" class="btn btn-outline-primary">Edit</a>
+        {% if appointment.status != 'CANCELLED' %}
+            <a href="{% url 'appointments:cancel' appointment.pk %}" class="btn btn-outline-danger">Cancel</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-4">Patient</dt><dd class="col-8">{{ appointment.patient.name }} ({{ appointment.patient.pid }})</dd>
+                    <dt class="col-4">Doctor</dt><dd class="col-8">Dr. {{ appointment.doctor.name }}</dd>
+                    <dt class="col-4">Department</dt><dd class="col-8">{{ appointment.doctor.department|default:"-" }}</dd>
+                    <dt class="col-4">Type</dt><dd class="col-8">{{ appointment.get_type_display }}</dd>
+                    <dt class="col-4">Status</dt><dd class="col-8"><span class="badge bg-{{ status_color }}">{{ appointment.get_status_display }}</span></dd>
+                    <dt class="col-4">Token</dt><dd class="col-8">{{ appointment.token_no|default:"-" }}</dd>
+                    <dt class="col-4">Notes</dt><dd class="col-8">{{ appointment.notes|default:"-"|linebreaksbr }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Status Timeline</div>
+            <div class="card-body">
+                <div class="border-start border-3 ps-3">
+                    <div class="mb-3">
+                        <strong>Created</strong>
+                        <div class="text-muted">{{ appointment.created_at|date:"d M Y, h:i A" }}</div>
+                    </div>
+                    <div>
+                        <strong>{{ appointment.get_status_display }}</strong>
+                        <div class="text-muted">Current status</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap gap-2">
+                <span class="text-muted me-auto">Quick status actions</span>
+                {% for value,label in appointment.STATUS_CHOICES %}
+                    {% if value != appointment.status %}
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="{{ value }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ label }}</button>
+                        </form>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

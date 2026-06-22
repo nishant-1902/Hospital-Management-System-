@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Departments | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Departments</h1>
+    <a href="{% url 'doctors:department_create' %}" class="btn btn-primary"><i class="fa-solid fa-plus me-1"></i> Add Department</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Location</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for department in departments %}
+                    <tr>
+                        <td>{{ department.name }}</td>
+                        <td>{{ department.location|default:"-" }}</td>
+                        <td class="text-end"><a href="{% url 'doctors:department_update' department.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">No departments found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
