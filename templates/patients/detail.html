@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load ahms_tags %}
+
+{% block title %}{{ patient.name }} | Patients | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ patient.name }}</h1>
+        <p class="text-muted mb-0">{{ patient.pid }} | {{ patient.get_gender_display }} | {% age patient.dob %} years</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'patients:update' patient.pk %}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-pen me-1"></i> Edit
+        </a>
+        <a href="{% url 'patients:delete' patient.pk %}" class="btn btn-outline-danger">
+            <i class="fa-solid fa-trash me-1"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if patient.photo %}
+                    <img src="{{ patient.photo.url }}" alt="{{ patient.name }}" class="rounded-circle mb-3" width="140" height="140">
+                {% else %}
+                    <div class="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center mb-3" style="width:140px;height:140px;">
+                        <i class="fa-solid fa-user fa-4x text-muted"></i>
+                    </div>
+                {% endif %}
+                <h2 class="h5 mb-1">{{ patient.name }}</h2>
+                <p class="text-muted mb-0">{{ patient.pid }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Demographics</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Phone</dt>
+                    <dd class="col-7">{{ patient.phone }}</dd>
+                    <dt class="col-5">DOB</dt>
+                    <dd class="col-7">{{ patient.dob|date:"d M Y" }}</dd>
+                    <dt class="col-5">Age</dt>
+                    <dd class="col-7">{% age patient.dob %} years</dd>
+                    <dt class="col-5">Gender</dt>
+                    <dd class="col-7">{{ patient.get_gender_display }}</dd>
+                    <dt class="col-5">Blood</dt>
+                    <dd class="col-7"><span class="badge bg-info">{{ patient.blood_group }}</span></dd>
+                    <dt class="col-5">Address</dt>
+                    <dd class="col-7">{{ patient.address|linebreaksbr }}</dd>
+                    <dt class="col-5">Document</dt>
+                    <dd class="col-7">
+                        {% if patient.id_document %}
+                            <a href="{{ patient.id_document.url }}" target="_blank" rel="noopener">View document</a>
+                        {% else %}
+                            <span class="text-muted">Not uploaded</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <ul class="nav nav-tabs card-header-tabs" id="patientTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab">Appointments</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="records-tab" data-bs-toggle="tab" data-bs-target="#records" type="button" role="tab">Medical Records</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab">Bills</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bed-tab" data-bs-toggle="tab" data-bs-target="#bed" type="button" role="tab">Bed</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content">
+                <div class="tab-pane fade show active" id="appointments" role="tabpanel" aria-labelledby="appointments-tab">
+                    <div class="timeline">
+                        {% for appointment in appointments %}
+                            {% badge_color appointment.status as status_color %}
+                            <div class="border-start border-3 ps-3 pb-3">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <div>
+                                        <div class="fw-semibold">{{ appointment.date|date:"d M Y" }} at {{ appointment.time|time:"h:i A" }}</div>
+                                        <div class="text-muted">{{ appointment.doctor }} | {{ appointment.get_type_display }}</div>
+                                    </div>
+                                    <span class="badge bg-{{ status_color }}">{{ appointment.get_status_display }}</span>
+                                </div>
+                                {% if appointment.notes %}<p class="mb-0 mt-2">{{ appointment.notes }}</p>{% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="text-muted mb-0">No appointments recorded.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="records" role="tabpanel" aria-labelledby="records-tab">
+                    <h3 class="h6">Active Prescriptions</h3>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-hover">
+                            <thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th></tr></thead>
+                            <tbody>
+                                {% for prescription in active_prescriptions %}
+                                    <tr>
+                                        <td>{{ prescription.medicine.name }}</td>
+                                        <td>{{ prescription.dosage }}</td>
+                                        <td>{{ prescription.frequency }}</td>
+                                        <td>{{ prescription.duration_days }} days</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="4" class="text-muted">No active prescriptions.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="h6">Medical Records</h3>
+                    {% for record in medical_records %}
+                        <div class="border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ record.created_at|date:"d M Y" }}</strong>
+                                <span class="text-muted">{{ record.doctor }}</span>
+                            </div>
+                            <p class="mb-1"><strong>Diagnosis:</strong> {{ record.diagnosis }}</p>
+                            <p class="mb-0"><strong>Treatment:</strong> {{ record.treatment }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted mb-0">No medical records available.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="tab-pane fade" id="bills" role="tabpanel" aria-labelledby="bills-tab">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead><tr><th>Bill</th><th>Date</th><th>Status</th><th class="text-end">Net Amount</th><th class="text-end">Paid</th></tr></thead>
+                            <tbody>
+                                {% for bill in recent_bills %}
+                                    {% badge_color bill.payment_status as bill_color %}
+                                    <tr>
+                                        <td>#{{ bill.pk }}</td>
+                                        <td>{{ bill.created_at|date:"d M Y" }}</td>
+                                        <td><span class="badge bg-{{ bill_color }}">{{ bill.get_payment_status_display }}</span></td>
+                                        <td class="text-end">{% currency bill.net_amount %}</td>
+                                        <td class="text-end">{% currency bill.paid_amount %}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4">No bills found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="bed" role="tabpanel" aria-labelledby="bed-tab">
+                    {% if active_admission %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded">
+                                    <div class="text-muted">Current Ward</div>
+                                    <div class="h5 mb-0">{{ active_admission.bed.ward.name }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded">
+                                    <div class="text-muted">Bed</div>
+                                    <div class="h5 mb-0">{{ active_admission.bed.bed_number }}</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 border rounded">
+                                    <div class="text-muted">Admitted At</div>
+                                    <div class="mb-0">{{ active_admission.admission_date|date:"d M Y, h:i A" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif current_bed %}
+                        <p class="mb-0">Currently assigned to {{ current_bed.ward.name }} - Bed {{ current_bed.bed_number }}.</p>
+                    {% else %}
+                        <p class="text-muted mb-0">No current bed assignment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
