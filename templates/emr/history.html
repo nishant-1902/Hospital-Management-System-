@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}EMR History | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">EMR History</h1>
+        <p class="text-muted mb-0">{{ patient.name }} ({{ patient.pid }})</p>
+    </div>
+    <a href="{% url 'patients:detail' patient.pk %}" class="btn btn-outline-secondary">Patient Profile</a>
+</div>
+
+<div class="accordion" id="emrHistory">
+    {% for record in records %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ record.pk }}">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#record{{ record.pk }}">
+                    {{ record.created_at|date:"d M Y, h:i A" }} - Dr. {{ record.doctor.name }} - {{ record.icd10_code|default:"No ICD-10" }}
+                </button>
+            </h2>
+            <div id="record{{ record.pk }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#emrHistory">
+                <div class="accordion-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h3 class="h6">Diagnosis</h3>
+                            <p>{{ record.diagnosis|linebreaksbr }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="h6">Treatment</h3>
+                            <p>{{ record.treatment|linebreaksbr }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'emr:detail' record.pk %}" class="btn btn-sm btn-outline-primary">Open record</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="card"><div class="card-body text-muted">No medical records found for this patient.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

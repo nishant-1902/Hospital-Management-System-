@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_update %}Update Medical Record{% else %}Start Consultation{% endif %} | AHMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">{% if is_update %}Update Medical Record{% else %}Start Consultation{% endif %}</h1>
+        <p class="text-muted mb-0">{{ patient.name }} ({{ patient.pid }}) with Dr. {{ appointment.doctor.name }}</p>
+    </div>
+    <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="emrForm">
+    {% csrf_token %}
+    <div class="row g-4">
+        <aside class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header">Patient Summary</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5">Patient ID</dt><dd class="col-7">{{ patient.pid }}</dd>
+                        <dt class="col-5">Name</dt><dd class="col-7">{{ patient.name }}</dd>
+                        <dt class="col-5">Gender</dt><dd class="col-7">{{ patient.get_gender_display }}</dd>
+                        <dt class="col-5">DOB</dt><dd class="col-7">{{ patient.dob|date:"d M Y" }}</dd>
+                        <dt class="col-5">Blood Group</dt><dd class="col-7">{{ patient.blood_group }}</dd>
+                        <dt class="col-5">Phone</dt><dd class="col-7">{{ patient.phone }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Visit Vitals</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5">Appointment</dt><dd class="col-7">#{{ appointment.pk }}</dd>
+                        <dt class="col-5">Date</dt><dd class="col-7">{{ appointment.date|date:"d M Y" }}</dd>
+                        <dt class="col-5">Time</dt><dd class="col-7">{{ appointment.time|time:"H:i" }}</dd>
+                        <dt class="col-5">Type</dt><dd class="col-7">{{ appointment.get_type_display }}</dd>
+                        <dt class="col-5">Notes</dt><dd class="col-7">{{ appointment.notes|default:"-"|linebreaksbr }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </aside>
+
+        <section class="col-xl-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>SOAP Note</span>
+                    <small class="text-muted" id="draftStatus">Draft not saved yet</small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.soap_notes.id_for_label }}">SOAP notes</label>
+                        {{ form.soap_notes }}
+                        {{ form.soap_notes.errors }}
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label" for="{{ form.diagnosis.id_for_label }}">Diagnosis</label>
+                            {{ form.diagnosis }}
+                            {{ form.diagnosis.errors }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="{{ form.icd10_code.id_for_label }}">ICD-10 code</label>
+                            {{ form.icd10_code }}
+                            <datalist id="icd10Options"></datalist>
+                            {{ form.icd10_code.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.treatment.id_for_label }}">Treatment plan</label>
+                            {{ form.treatment }}
+                            {{ form.treatment.errors }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Prescriptions</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addPrescription">Add row</button>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    <datalist id="medicineOptions"></datalist>
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="prescriptionTable">
+                            <thead>
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Days</th>
+                                    <th>Instructions</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rx_form in formset %}
+                                    <tr class="prescription-row">
+                                        <td>{{ rx_form.id }}{{ rx_form.medicine }}{{ rx_form.medicine.errors }}</td>
+                                        <td>{{ rx_form.dosage }}{{ rx_form.dosage.errors }}</td>
+                                        <td>{{ rx_form.frequency }}{{ rx_form.frequency.errors }}</td>
+                                        <td>{{ rx_form.duration_days }}{{ rx_form.duration_days.errors }}</td>
+                                        <td>{{ rx_form.instructions }}{{ rx_form.instructions.errors }}</td>
+                                        <td>
+                                            {% if rx_form.DELETE %}<span class="d-none">{{ rx_form.DELETE }}</span>{% endif %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-prescription">Remove</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <template id="emptyPrescriptionTemplate">
+                        <tr class="prescription-row">
+                            <td>{{ formset.empty_form.id }}{{ formset.empty_form.medicine }}</td>
+                            <td>{{ formset.empty_form.dosage }}</td>
+                            <td>{{ formset.empty_form.frequency }}</td>
+                            <td>{{ formset.empty_form.duration_days }}</td>
+                            <td>{{ formset.empty_form.instructions }}</td>
+                            <td>
+                                <span class="d-none">{{ formset.empty_form.DELETE }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-prescription">Remove</button>
+                            </td>
+                        </tr>
+                    </template>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">Attachments</div>
+                <div class="card-body">
+                    {{ form.attachments }}
+                    {{ form.attachments.errors }}
+                    <div class="row g-2 mt-3" id="attachmentPreview"></div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary">Save Medical Record</button>
+            </div>
+        </section>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const form = document.getElementById("emrForm");
+    const totalForms = document.getElementById("id_prescriptions-TOTAL_FORMS");
+    const tableBody = document.querySelector("#prescriptionTable tbody");
+    const emptyTemplate = document.getElementById("emptyPrescriptionTemplate");
+    const draftStatus = document.getElementById("draftStatus");
+    const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    function wireRemoveButtons() {
+        document.querySelectorAll(".remove-prescription").forEach((button) => {
+            button.onclick = () => {
+                const row = button.closest("tr");
+                const deleteInput = row.querySelector("input[type=checkbox][name$='-DELETE']");
+                if (deleteInput) {
+                    deleteInput.checked = true;
+                    row.classList.add("d-none");
+                } else {
+                    row.remove();
+                }
+            };
+        });
+    }
+
+    document.getElementById("addPrescription").addEventListener("click", () => {
+        const index = parseInt(totalForms.value, 10);
+        const html = emptyTemplate.innerHTML.replaceAll("__prefix__", index);
+        tableBody.insertAdjacentHTML("beforeend", html);
+        totalForms.value = index + 1;
+        wireRemoveButtons();
+    });
+    wireRemoveButtons();
+
+    const icdInput = document.getElementById("{{ form.icd10_code.id_for_label }}");
+    const icdOptions = document.getElementById("icd10Options");
+    let icdTimer;
+    icdInput.addEventListener("input", () => {
+        clearTimeout(icdTimer);
+        icdTimer = setTimeout(async () => {
+            if (icdInput.value.length < 2) return;
+            const response = await fetch("{% url 'emr:icd10' %}?q=" + encodeURIComponent(icdInput.value));
+            const payload = await response.json();
+            icdOptions.innerHTML = payload.results.map((item) => `<option value="${item.code}">${item.description}</option>`).join("");
+        }, 250);
+    });
+
+    const attachments = document.getElementById("id_attachments");
+    const preview = document.getElementById("attachmentPreview");
+    attachments.addEventListener("change", () => {
+        preview.innerHTML = "";
+        Array.from(attachments.files).forEach((file) => {
+            const col = document.createElement("div");
+            col.className = "col-md-6";
+            col.innerHTML = `<div class="border rounded p-2 small"><strong>${file.name}</strong><br><span class="text-muted">${Math.ceil(file.size / 1024)} KB</span></div>`;
+            preview.appendChild(col);
+        });
+    });
+
+    async function saveDraft() {
+        if (!form || "{{ is_update|yesno:'1,0' }}" === "1") return;
+        const body = new FormData(form);
+        body.append("draft", "1");
+        const response = await fetch(window.location.href, {
+            method: "POST",
+            headers: {"X-Requested-With": "XMLHttpRequest", "X-CSRFToken": csrf},
+            body
+        });
+        if (response.ok) {
+            draftStatus.textContent = "Draft saved " + new Date().toLocaleTimeString();
+        }
+    }
+    setInterval(saveDraft, 60000);
+})();
+</script>
+{% endblock %}

@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/v1/appointments/", include(("apps.appointments.api_urls", "appointments"), namespace="appointments-api")),
     path("api/v1/emr/", include(("apps.emr.api_urls", "emr"), namespace="emr-api")),
     path("api/v1/laboratory/", include(("apps.laboratory.api_urls", "laboratory"), namespace="laboratory-api")),
+    path("api/v1/lab/", include(("apps.laboratory.api_urls", "laboratory"), namespace="lab-api")),
     path("api/v1/pharmacy/", include(("apps.pharmacy.api_urls", "pharmacy"), namespace="pharmacy-api")),
     path("api/v1/billing/", include(("apps.billing.api_urls", "billing"), namespace="billing-api")),
     path("api/v1/wards/", include(("apps.wards.api_urls", "wards"), namespace="wards-api")),

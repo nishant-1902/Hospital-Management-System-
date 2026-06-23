@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Lab Report #{{ order.pk }} | AHMS{% endblock %}
+
+{% block extra_css %}
+<style>
+.flagged { color: #b00020; font-weight: 700; }
+@media print {
+    .ahms-sidebar, .ahms-navbar, .ahms-footer, .btn, .breadcrumb { display: none !important; }
+    .ahms-main, .container-fluid { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .card { border: 0 !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Lab Report #{{ order.pk }}</h1>
+        <p class="text-muted mb-0">{{ order.ordered_at|date:"d M Y, h:i A" }}</p>
+    </div>
+    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="text-center border-bottom pb-3 mb-4">
+            <h2 class="h4 mb-1">AHMS Hospital Laboratory</h2>
+            <p class="mb-0 text-muted">Diagnostic Report</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><strong>Patient:</strong> {{ order.patient.name }}</div>
+            <div class="col-md-4"><strong>Patient ID:</strong> {{ order.patient.pid }}</div>
+            <div class="col-md-4"><strong>Doctor:</strong> Dr. {{ order.doctor.name }}</div>
+            <div class="col-md-4"><strong>Priority:</strong> {{ order.get_priority_display }}</div>
+            <div class="col-md-4"><strong>Status:</strong> {{ order.get_status_display }}</div>
+            <div class="col-md-4"><strong>Order:</strong> #{{ order.pk }}</div>
+        </div>
+
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Test</th>
+                    <th>Result</th>
+                    <th>Unit</th>
+                    <th>Normal Range</th>
+                    <th>Flag</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.laborderitem_set.all %}
+                    <tr>
+                        <td>{{ item.test.name }}<br><span class="text-muted small">{{ item.test.code }}</span></td>
+                        <td class="{% if item.flag and item.flag != 'NORMAL' %}flagged{% endif %}">{{ item.result|default:"Pending" }}</td>
+                        <td>{{ item.test.unit|default:"-" }}</td>
+                        <td>{{ item.test.normal_range|default:"-" }}</td>
+                        <td class="{% if item.flag and item.flag != 'NORMAL' %}flagged{% endif %}">{{ item.flag|default:"-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

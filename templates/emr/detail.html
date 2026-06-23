@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Record #{{ record.pk }} | AHMS{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .ahms-sidebar, .ahms-navbar, .ahms-footer, .btn, .breadcrumb { display: none !important; }
+    .ahms-main, .container-fluid { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .card { border: 0 !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Medical Record #{{ record.pk }}</h1>
+        <p class="text-muted mb-0">{{ record.created_at|date:"d M Y, h:i A" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+        {% if request.user.role == 'ADMIN' or request.user.id == record.doctor.user_id %}
+            <a href="{% url 'emr:update' record.pk %}" class="btn btn-primary">Edit</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="text-center border-bottom pb-3 mb-4">
+            <h2 class="h4 mb-1">AHMS Hospital</h2>
+            <p class="mb-0 text-muted">Electronic Medical Record</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><strong>Patient:</strong> {{ record.patient.name }} ({{ record.patient.pid }})</div>
+            <div class="col-md-6"><strong>Doctor:</strong> Dr. {{ record.doctor.name }}</div>
+            <div class="col-md-6"><strong>Appointment:</strong> #{{ record.appointment_id }}</div>
+            <div class="col-md-6"><strong>ICD-10:</strong> {{ record.icd10_code|default:"-" }}</div>
+        </div>
+
+        <h2 class="h5">SOAP Notes</h2>
+        <div class="border rounded p-3 mb-4">{{ record.soap_notes|default:"-"|linebreaksbr }}</div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <h2 class="h5">Diagnosis</h2>
+                <p>{{ record.diagnosis|linebreaksbr }}</p>
+            </div>
+            <div class="col-md-6">
+                <h2 class="h5">Treatment</h2>
+                <p>{{ record.treatment|linebreaksbr }}</p>
+            </div>
+        </div>
+
+        <h2 class="h5">Prescriptions</h2>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for prescription in record.prescriptions.all %}
+                        <tr>
+                            <td>{{ prescription.medicine.name }}</td>
+                            <td>{{ prescription.dosage }}</td>
+                            <td>{{ prescription.frequency }}</td>
+                            <td>{{ prescription.duration_days }} days</td>
+                            <td>{{ prescription.instructions|default:"-" }}</td>
+                            <td>{% if prescription.is_dispensed %}Dispensed{% else %}Pending{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="text-muted">No prescriptions recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="h5">Attachments</h2>
+        <div class="list-group">
+            {% for attachment in record.attachments.all %}
+                <a class="list-group-item list-group-item-action" href="{{ attachment.file.url }}" target="_blank">
+                    {{ attachment.label|default:attachment.file.name }}
+                    <span class="text-muted float-end">{{ attachment.uploaded_at|date:"d M Y" }}</span>
+                </a>
+            {% empty %}
+                <div class="list-group-item text-muted">No attachments.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

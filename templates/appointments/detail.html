@@ -11,6 +11,9 @@
         <p class="text-muted mb-0">{{ appointment.date|date:"d M Y" }} at {{ appointment.time|time:"H:i" }}</p>
     </div>
     <div class="d-flex gap-2">
+        {% if request.user.role == 'DOCTOR' or request.user.role == 'ADMIN' %}
+            <a href="{% url 'emr:create' appointment.pk %}" class="btn btn-success">Start Consultation</a>
+        {% endif %}
         <a href="{% url 'appointments:update' appointment.pk %}" class="btn btn-outline-primary">Edit</a>
         {% if appointment.status != 'CANCELLED' %}
             <a href="{% url 'appointments:cancel' appointment.pk %}" class="btn btn-outline-danger">Cancel</a>
